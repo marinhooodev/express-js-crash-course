@@ -11,9 +11,8 @@ var posts = [
 ];
 
 
-
 // GET all posts
-router.get("/", (req, res) => {
+router.get("/", (req, res, next) => {
     const limit = parseInt(req.query.limit);
 
     if (isNaN(limit) || limit < 0) return res.status(200).json(posts);
@@ -22,7 +21,7 @@ router.get("/", (req, res) => {
 });
 
 // GET single post
-router.get("/:id", (req, res) => {
+router.get("/:id", (req, res, next) => {
     let id = parseInt(req.params.id);
     let post = posts.find((post) => post.id === id);
 
@@ -30,15 +29,23 @@ router.get("/:id", (req, res) => {
         return res.status(400).json({message:'Invalid ID!'})
     }
 
+    if(!post) {
+        const error = new Error(`A post with the id of ${id} was not found`)
+        error.status = 404;
+        return next(error)
+    }
+
     res.status(200).json(post);
 });
 
 // Create new post
-router.post("/", (req, res) => {
+router.post("/", (req, res, next) => {
     const body = req.body;
 
     if (!body.title) {
-        res.status(400).json({ message: "Title not found" });
+        const error = new Error("Please include a title")
+        error.status = 400;
+        return next(error)
     }
 
     const newPost = {
